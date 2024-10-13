@@ -18,6 +18,7 @@ function ModelEnd() {
           component={Link}
           to="/profile-view"
           sx={{ mt: 2 }}
+          style = {{backgroundColor: 'black'}}
         >
           View Your Profile
         </Button>
@@ -29,6 +30,7 @@ function ModelEnd() {
          component={Link}
          to="/"
          sx={{mt: 2}}
+         style = {{backgroundColor: 'black'}}
          >
             Log Out
          </Button>

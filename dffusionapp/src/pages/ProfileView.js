@@ -109,6 +109,7 @@ function ProfileView() {
             variant="contained"
             color="primary"
             onClick={() => navigate('/model-end')}
+            style = {{backgroundColor: 'black'}}
           >
             Back to Confirmation
           </Button>
@@ -118,6 +119,7 @@ function ProfileView() {
               variant="contained"
               color = "primary"
               onClick = {() => navigate('/model-dashboard')}
+              style= {{backgroundColor: 'black'}}
               >
                 Edit Profile
               </Button>

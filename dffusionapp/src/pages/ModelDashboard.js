@@ -251,7 +251,7 @@ function ModelDashboard() {
 
           {/* Resume Upload */}
           <Box sx={{ mb: 2 }}>
-            <Button variant="contained" component="label">
+            <Button variant="contained" component="label" style ={{backgroundColor :'black'}}>
               Upload Resume (Optional)
               <input
                 type="file"
@@ -274,6 +274,7 @@ function ModelDashboard() {
             color="primary"
             disabled={loading}
             fullWidth
+            style = {{backgroundColor: 'black'}}
           >
             {loading ? <CircularProgress size={24} /> : 'Update Profile'}
           </Button>
