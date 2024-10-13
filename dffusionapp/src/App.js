@@ -18,7 +18,7 @@ import { Container, Typography, Box } from '@mui/material';
 function ButtonVisibility() {
   const location = useLocation();
   const isHomePage = location.pathname === '/'; // Check if the current path is the homepage
-  const isSignupPage = location.pathname === '/signup/company'; // Check for CompanySignup
+  const isSignupPage = location.pathname === '/'; // Check for CompanySignup
 
   return (
     <>

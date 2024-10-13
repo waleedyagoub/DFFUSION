@@ -17,7 +17,7 @@ function CompanySignup() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/company-login'); // Redirect to login after signup
+      navigate('/login/company'); // Redirect to login after signup
     } catch (error) {
       setError(error.message); // Set the error message to display
     }
@@ -25,7 +25,8 @@ function CompanySignup() {
 
   return (
     <Container>
-      <Typography variant="h4">Company Sign Up</Typography>
+      <Typography variant="h4">Company Sign Up
+         </Typography>
       <form onSubmit={handleSignup}>
         <TextField
           label="Email"
@@ -42,9 +43,20 @@ function CompanySignup() {
           fullWidth
           required
         />
-        <Button type="submit" variant="contained" color="primary" fullWidth>
-          Sign Up
-        </Button>
+        <Button
+              variant="contained"
+              sx={{
+                backgroundColor: 'black',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#333',
+                },
+                mt: 1, // Added margin top for spacing
+              }}
+              fullWidth
+            >
+              Sign Up
+            </Button>
       </form>
 
       {/* Error message display */}
@@ -58,9 +70,20 @@ function CompanySignup() {
       <Typography variant="body2" style={{ marginTop: '20px' }}>
         Already have an account?
         <Link to="/login/company" style={{ textDecoration: 'none' }}>
-          <Button variant="text" color="primary">
-            Login
-          </Button>
+        <Button
+              variant="contained"
+              sx={{
+                backgroundColor: 'black',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#333',
+                },
+                mt: 1, // Added margin top for spacing
+              }}
+              fullWidth
+            >
+              Log In
+            </Button>
         </Link>
       </Typography>
     </Container>

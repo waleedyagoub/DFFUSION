@@ -3,23 +3,24 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container,
-  TextField,
-  Button,
   Typography,
   Box,
-  MenuItem,
+  Button,
+  CircularProgress,
+  Alert,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  //TextField,
   FormControl,
   InputLabel,
   Select,
-  OutlinedInput,
-  CircularProgress,
-  Alert,
+  MenuItem,
 } from '@mui/material';
-import { useAuth } from '../AuthContext';
-import { db, storage } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const races = [
   'Asian',
@@ -34,124 +35,43 @@ const races = [
 const genders = ['Male', 'Female', 'Non-Binary', 'Prefer not to say'];
 
 function ModelDashboard() {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate(); // Added useNavigate hook
-
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [location, setLocation] = useState('');
-  const [height, setHeight] = useState('');
-  const [race, setRace] = useState('');
-  const [gender, setGender] = useState('');
-  const [resume, setResume] = useState(null);
-
-  const [loading, setLoading] = useState(false);
+  const [models, setModels] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [raceFilter, setRaceFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
 
-  // Fetch existing data if any
+  // Fetch models data from Firestore
   useEffect(() => {
-    const fetchData = async () => {
-      if (currentUser) {
-        const docRef = doc(db, 'models', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setName(data.name || '');
-          setAge(data.age || '');
-          setPhoneNumber(data.phoneNumber || '');
-          setLocation(data.location || '');
-          setHeight(data.height || '');
-          setRace(data.race || '');
-          setGender(data.gender || '');
-          // Resume URL is not fetched as we don't store it in state
-        }
+    const fetchModels = async () => {
+      setLoading(true);
+      try {
+        const snapshot = await getDocs(collection(db, 'models'));
+        const modelsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setModels(modelsData);
+      } catch (err) {
+        console.error('Error fetching models:', err);
+        setError('Failed to load models. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchData();
-  }, [currentUser]);
 
-  const handleResumeChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setResume(e.target.files[0]);
-    }
-  };
+    fetchModels();
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-  
-    console.log('current User in handleSubmit:', currentUser)
-    // Input Validation
-    if (!name || !age || !phoneNumber || !location || !height || !race || !gender) {
-      setError('Please fill in all required fields.');
-      setLoading(false);
-      return;
-    }
-  
-    if (parseInt(age) <= 0) {
-      setError('Please enter a valid age.');
-      setLoading(false);
-      return;
-    }
-  
-    if (parseInt(height) <= 0) {
-      setError('Please enter a valid height.');
-      setLoading(false);
-      return;
-    }
-    if(!currentUser){
-      setError('User not authenticated. Please log in.');
-      setLoading(false);
-      return
-    }
-    try {
-      let resumeUrl = null;
-  
-      // Upload Resume to Firebase Storage if provided
-      if (resume) {
-        const resumeRef = ref(
-          storage,
-          `model-resumes/${currentUser.uid}/${Date.now()}_${resume.name}`
-        );
-        await uploadBytes(resumeRef, resume);
-        resumeUrl = await getDownloadURL(resumeRef);
-      }
-  
-      // Save Data to Firestore
-      const modelDocRef = doc(db, 'models', currentUser.uid);
-      await setDoc(modelDocRef, {
-        name: name.trim(),
-        age: parseInt(age),
-        phoneNumber: phoneNumber.trim(),
-        location: location.trim(),
-        height: parseInt(height),
-        race: race,
-        gender: gender,
-        resumeUrl: resumeUrl,
-        updatedAt: new Date(),
-      });
-  
-      // Redirect to ModelEnd page after successful submission
-      navigate('/model-end');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      setError('Failed to update your profile. Please try again.');
-    } finally {
-      setLoading(false); // Ensure loading state is reset
-    }
-  };
-  
+  const filteredModels = models.filter(model => {
+    return (
+      (!raceFilter || model.race === raceFilter) &&
+      (!genderFilter || model.gender === genderFilter)
+    );
+  });
 
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Model Dashboard
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          Enter your details to complete your profile.
+          Model Gallery
         </Typography>
 
         {error && (
@@ -160,70 +80,16 @@ function ModelDashboard() {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          {/* Name */}
-          <TextField
-            label="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-          {/* Age */}
-          <TextField
-            label="Age"
-            type="number"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            required
-            fullWidth
-            inputProps={{ min: 1 }}
-            sx={{ mb: 2 }}
-          />
-
-          {/* Phone Number */}
-          <TextField
-            label="Phone Number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            required
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-          {/* Location */}
-          <TextField
-            label="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            required
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-          {/* Height */}
-          <TextField
-            label="Height (cm)"
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            required
-            fullWidth
-            inputProps={{ min: 1 }}
-            sx={{ mb: 2 }}
-          />
-
-          {/* Race Selection */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="race-label">Race</InputLabel>
+        {/* Filters */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <FormControl fullWidth>
+            <InputLabel id="race-filter-label">Race</InputLabel>
             <Select
-              labelId="race-label"
-              value={race}
-              onChange={(e) => setRace(e.target.value)}
-              input={<OutlinedInput label="Race" />}
+              labelId="race-filter-label"
+              value={raceFilter}
+              onChange={(e) => setRaceFilter(e.target.value)}
             >
+              <MenuItem value=""><em>All</em></MenuItem>
               {races.map((raceOption) => (
                 <MenuItem key={raceOption} value={raceOption}>
                   {raceOption}
@@ -232,15 +98,14 @@ function ModelDashboard() {
             </Select>
           </FormControl>
 
-          {/* Gender Selection */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="gender-label">Gender</InputLabel>
+          <FormControl fullWidth>
+            <InputLabel id="gender-filter-label">Gender</InputLabel>
             <Select
-              labelId="gender-label"
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              input={<OutlinedInput label="Gender" />}
+              labelId="gender-filter-label"
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
             >
+              <MenuItem value=""><em>All</em></MenuItem>
               {genders.map((genderOption) => (
                 <MenuItem key={genderOption} value={genderOption}>
                   {genderOption}
@@ -248,37 +113,36 @@ function ModelDashboard() {
               ))}
             </Select>
           </FormControl>
-
-          {/* Resume Upload */}
-          <Box sx={{ mb: 2 }}>
-            <Button variant="contained" component="label" style ={{backgroundColor :'black'}}>
-              Upload Resume (Optional)
-              <input
-                type="file"
-                hidden
-                accept=".pdf,.doc,.docx"
-                onChange={handleResumeChange}
-              />
-            </Button>
-            {resume && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Selected File: {resume.name}
-              </Typography>
-            )}
-          </Box>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            fullWidth
-            style = {{backgroundColor: 'black'}}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Update Profile'}
-          </Button>
         </Box>
+
+        {/* Loading Spinner */}
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <Grid container spacing={2}>
+            {filteredModels.map((model) => (
+              <Grid item xs={12} sm={6} md={4} key={model.id}>
+                <Card>
+                  <CardMedia
+                    component="img"
+                    alt={model.name}
+                    height="140"
+                    image={model.imageUrl} // Ensure this field exists in your Firestore data
+                  />
+                  <CardContent>
+                    <Typography variant="h6">{model.name}</Typography>
+                    <Typography color="text.secondary">
+                      {model.race}, {model.gender}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small">View Profile</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Box>
     </Container>
   );

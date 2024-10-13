@@ -39,7 +39,9 @@ function CompanyLogin() {
           fullWidth
           required
         />
-        <Button type="submit" variant="contained" color="primary" fullWidth>
+        <Button type="submit" variant="contained" color="primary" fullWidth
+          style={{backgroundColor : 'black'}}
+        >
           Login
         </Button>
       </form>
@@ -48,7 +50,7 @@ function CompanyLogin() {
       <Typography variant="body2" style={{ marginTop: '20px' }}>
         Don't have an account?
         <Link to="/signup/company" style={{ textDecoration: 'none' }}>
-          <Button variant="text" color="primary">
+          <Button variant="contained" color="primary" style = {{backgroundColor: 'black'}}>
             Sign Up
           </Button>
         </Link>
